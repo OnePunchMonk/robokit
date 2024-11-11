@@ -35,7 +35,7 @@ class SaveData:
             current_time = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
             self.main_dir_name = os.path.join(os.getcwd(), current_time)
         else:
-            self.main_dir_name = os.path.join(os.getcwd(), self.task_name.lower().replace(' ','_'))
+            self.main_dir_name = os.path.join(os.getcwd(), f"{self.task_name.lower().replace(' ','_')}-{self.time_delay}")
         self.color_dir_name = os.path.join(self.main_dir_name, "rgb")
         self.depth_dir_name = os.path.join(self.main_dir_name, "depth")
         self.pose_dir_name = os.path.join(self.main_dir_name, "pose")
