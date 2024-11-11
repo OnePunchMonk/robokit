@@ -39,16 +39,16 @@ class FileFetch(install):
 
 
         # Step DHYOLO.1: Clone the DH-YOLO repository
-        # try:
-        #     subprocess.run(["git", "clone", "https://github.com/IRVLUTD/iTeach"], check=True)
-        # except:
-        #     pass
+        try:
+            subprocess.run(["git", "clone", "https://github.com/IRVLUTD/iTeach"], check=True)
+        except:
+            pass
 
         # Step DHYOLO.2: Copy the required folder
-        # subprocess.run(["cp", "-r", "iTeach/toolkit/iteach_toolkit", "robokit"], check=True)
+        subprocess.run(["cp", "-r", "iTeach/toolkit/iteach_toolkit", "robokit"], check=True)
 
-        # # Step DHYOLO.3: Copy the required folder
-        # subprocess.run(["rm", "-rf", "iTeach"], check=True)
+        # Step DHYOLO.3: Copy the required folder
+        subprocess.run(["rm", "-rf", "iTeach"], check=True)
 
 
 
