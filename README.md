@@ -2,6 +2,7 @@
 A toolkit for robotic tasks
 
 ## Features
+- A [Dockerfile](docker/Dockerfile-ub20.04-ros-noetic-cuda11.8-gazebo) to mimic robotic setup with ROS-noetic, CUDA11.8, Ubuntu20.04, Gazebo11
 - Zero-shot classification using OpenAI CLIP.
 - Zero-shot text-to-bbox approach for object detection using GroundingDINO.
 - Zero-shot bbox-to-mask approach for object detection using SegmentAnything (MobileSAM).
