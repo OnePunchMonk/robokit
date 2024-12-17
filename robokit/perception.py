@@ -757,7 +757,7 @@ class SAM2VideoPredictor(ObjectPredictor):
                         (bbox[0], bbox[1]), bbox[2] - bbox[0], bbox[3] - bbox[1], 
                         linewidth=2, edgecolor="red", facecolor="none"))
                     
-                    out_file_name = f"{out_frame_idx:06d}.jpg"
+                    out_file_name = frame_names[out_frame_idx].replace('.jpg', '.png')
 
                     # Show segmentation masks
                     for out_obj_id, out_mask in video_segments[out_frame_idx].items():
