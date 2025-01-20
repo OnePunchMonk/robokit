@@ -15,14 +15,14 @@ import tf
 import tf2_ros
 import message_filters
 from sensor_msgs.msg import Image, CameraInfo, PointCloud2
-from cv_bridge import CvBridge
+# from cv_bridge import CvBridge
 
 from .ros_utils import ros_qt_to_rt
 
 from nav_msgs.msg import Odometry, OccupancyGrid
 import time
 import yaml
-# import ros_numpy
+import ros_numpy
 
 lock = threading.Lock()
 
@@ -132,9 +132,9 @@ class ImageListener:
             # RT_base = None # For map, uncomment
 
         if depth.encoding == "32FC1":
-            depth_cv = self.cv_bridge.imgmsg_to_cv2(depth)
-            depth_cv = np.array(depth_cv)
-            # depth_cv = ros_numpy.numpify(depth)
+            # depth_cv = self.cv_bridge.imgmsg_to_cv2(depth)
+            # depth_cv = np.array(depth_cv)
+            depth_cv = ros_numpy.numpify(depth)
             depth_cv[np.isnan(depth_cv)] = 0
             depth_cv = depth_cv * 1000
             # depth_cv = np.array(depth_cv, dtype=np.uint16)
@@ -143,10 +143,10 @@ class ImageListener:
              # and save instead of max depth = 20
             # depth_cv = 255 * (20 - depth_cv) / 20
         elif depth.encoding == "16UC1":
-            depth_cv = self.cv_bridge.imgmsg_to_cv2(depth).copy().astype(np.float32)
-            depth_cv = depth_cv.copy().astype(np.float32)
+            # depth_cv = self.cv_bridge.imgmsg_to_cv2(depth).copy().astype(np.float32)
+            # depth_cv = depth_cv.copy().astype(np.float32)
             # print("16uc1")
-            # depth_cv = ros_numpy.numpify(depth).copy().astype(np.float32)
+            depth_cv = ros_numpy.numpify(depth).copy().astype(np.float32)
             depth_cv /= 1000.0
         else:
             rospy.logerr_throttle(
@@ -157,8 +157,8 @@ class ImageListener:
             )
             return
 
-        im = self.cv_bridge.imgmsg_to_cv2(rgb, 'bgr8')
-        # im = ros_numpy.numpify(rgb)
+        # im = self.cv_bridge.imgmsg_to_cv2(rgb, 'bgr8')
+        im = ros_numpy.numpify(rgb)[:,:,::-1] # bgr to rgb
         with lock:
             self.im = im.copy()
             self.depth = depth_cv.copy()
