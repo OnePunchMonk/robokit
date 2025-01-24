@@ -34,6 +34,8 @@ os.system("python setup.py build develop --user")
 os.system("pip install packaging==21.3")
 warnings.filterwarnings("ignore")
 
+# resolve pyqt5 and cv2 issue
+os.environ.pop("QT_QPA_PLATFORM_PLUGIN_PATH")
 
 class Logger(object):
     """
