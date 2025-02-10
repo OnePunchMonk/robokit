@@ -34,6 +34,8 @@ os.system("python setup.py build develop --user")
 os.system("pip install packaging==21.3")
 warnings.filterwarnings("ignore")
 
+# resolve pyqt5 and cv2 issue
+os.environ.pop("QT_QPA_PLATFORM_PLUGIN_PATH")
 
 class Logger(object):
     """
@@ -757,7 +759,7 @@ class SAM2VideoPredictor(ObjectPredictor):
                         (bbox[0], bbox[1]), bbox[2] - bbox[0], bbox[3] - bbox[1], 
                         linewidth=2, edgecolor="red", facecolor="none"))
                     
-                    out_file_name = f"{out_frame_idx:06d}.jpg"
+                    out_file_name = frame_names[out_frame_idx].replace('.jpg', '.png')
 
                     # Show segmentation masks
                     for out_obj_id, out_mask in video_segments[out_frame_idx].items():
