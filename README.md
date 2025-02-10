@@ -13,9 +13,10 @@ A toolkit for robotic tasks
 - Zero-shot DoorHandle detection using [iTeach](https://irvlutd.github.io/iTeach/)-[DHYOLO](https://huggingface.co/spaces/IRVLUTD/DH-YOLO) model
 - Zero-shot bbox-to-mask video propogation approach for object tracking using SegmentAnythingV2 (SAMv2).
   - Note that SAMv2 only supports mp4 or jpg files as of 11/06/2024
-  - Currently only supports bbox prompt with all video frames stored as jpg files in a directory
+  - Currently only supports 
+    - Single bbox prompt with all video frames stored as jpg files in a directory
+    - Collection of points as prompts for various objects
   - If you have an mp4 file then extract individual frames as jpg and store in a directory
-
 
 ## Getting Started
 
@@ -61,7 +62,10 @@ pip install --upgrade --force-reinstall hydra-core
 - Depth Anything: [`test_depth_anything.py`](test/test_depth_anything.py)
 - FeatUp: [`test_featup.py`](test/test_featup.py)
 - iTeach-DHYOLO: [`test_dhyolo.py`](test/test_dhyolo.py)
-- SAMv2: [`test_samv2.py`](test/test_samv2.py)
+- SAMv2: 
+  - [`collect_point_prompts.py`](test/collect_point_prompts.py)
+  - [`test_samv2_1_bbox_prompt.py`](test/test_samv2_1_bbox_prompt.py)
+  - [`test_samv2_point_prompts.py`](test/test_samv2_point_prompts.py)
 - Test Datasets: [`test_dataset.py`](test/test_dataset.py)
   - `python test_dataset.py --gpu 0 --dataset <ocid_object_test/osd_object_test>`
 

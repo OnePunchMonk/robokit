@@ -84,16 +84,20 @@ def main(argv):
         # Track each bounding box across frames
         if len(initial_bboxes) > 0:
             logging.info(f"Detected {len(initial_bboxes)} bounding boxes in the first frame")
+            
+            bbox_array = []
 
             # Process each bounding box
             for i, bbox in enumerate(initial_bboxes):
                 # Convert bbox to [x_min, y_min, x_max, y_max] format
                 x_min, y_min, x_max, y_max = gdino.bbox_to_scaled_xyxy(bbox, *first_frame.size)
-                bbox_array = np.array([x_min, y_min, x_max, y_max])
+                bbox_array.append(np.array([x_min, y_min, x_max, y_max]))
 
-                logging.info(f"SAM2: Track bounding box {i+1} across all frames")
-                # Track and propagate the bounding box across frames with the specified save interval
-                frame_names, video_segments = sam2.propagate_masks_and_save(video_dir, bbox_array, save_interval)
+            bbox_array = np.array(bbox_array, dtype=np.float32)
+
+            logging.info(f"SAM2: Track bounding box across all frames")
+            # Track and propagate the bounding box across frames with the specified save interval
+            frame_names, video_segments = sam2.propagate_masks_and_save(video_dir, bbox_array, save_interval)
             
             logging.info("Tracking complete for all bounding boxes")
         else:

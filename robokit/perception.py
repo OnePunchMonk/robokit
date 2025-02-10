@@ -654,61 +654,19 @@ class SAM2VideoPredictor(ObjectPredictor):
                 print(f"Renamed: {filename} -> {new_filename}")
 
 
-    def segment_using_bbox(self, video_dir, frame_idx, bbox):
-        """
-        Segment an object from the video frame using a bounding box.
-        
-        Parameters:
-        - video_dir: Path to video frames directory
-        - frame_idx: Index of the frame to work with
-        - bbox: The bounding box [x_min, y_min, x_max, y_max]
-        """
-        try:
-            """
-            SAM 2 requires stateful inference for interactive video segmentation, so we need to initialize an inference state on this video.
-            During initialization, it loads all the JPEG frames in video_path and stores their pixels in inference_state
-            """
-
-            inference_state = self.predictor.init_state(video_path=video_dir)
-
-            # Note: if you have run any previous tracking using this inference_state, please reset it first via reset_state.
-            self.predictor.reset_state(inference_state)
-
-            # Load the video frames
-            self._load_and_show_frame(video_dir, show_frame=True)
-
-            # Load the frame
-            frame_names = self.load_frames_from_directory(video_dir)
-            frame_path = os.path.join(video_dir, frame_names[frame_idx])
-            image = PILImg.open(frame_path)
-            plt.imshow(image)
-            plt.title(f"Frame {frame_idx}")
-
-            # Perform segmentation using the bounding box
-            ann_obj_id = 1  # Unique identifier for the object
-            _, out_obj_ids, out_mask_logits = self.predictor.add_new_points_or_box(
-                inference_state=inference_state,
-                frame_idx=frame_idx,
-                obj_id=ann_obj_id,
-                box=bbox
-            )
-            self.show_box(bbox, plt.gca())
-            self.show_mask((out_mask_logits[0] > 0.0).cpu().numpy(), plt.gca(), obj_id=out_obj_ids[0])
-
-            plt.show()
-
-        except Exception as e:
-            print(f"Error during segmentation: {e}")
-            raise
-
-    def propagate_masks_and_save(self, video_dir, bbox, vis_frame_stride=1, save_output=True):
+    def propagate_point_prompt_masks_and_save(self, video_dir, point_prompts, save_output=True):
         """
         Propagate the segmentation mask across the entire video and optionally save the frames with masks to a subdirectory.
-        
+        Assumption: Only one object in the frame + only one box prompt is given as prompt
         Parameters:
         - video_dir: Path to the video frames directory.
-        - bbox: The bounding box [x_min, y_min, x_max, y_max] for initial segmentation.
-        - vis_frame_stride: Number of frames to skip while visualizing the segmentation (default is 30).
+        - point_prompts: List of object point prompts as [[(x1,y1, pos-1), [x2,y2,neg-0], ...]]
+            -  each element is a list of point prompts for an object
+                -  x,y is the pixel location
+                -  pos is indicates positive label
+                -  neg indicated negative label
+                -  x and y are needed for point params
+                -  pos and neg are required for label params
         - save_output: If True, saves the segmented frames (default is True).
         """
         try:
@@ -719,15 +677,99 @@ class SAM2VideoPredictor(ObjectPredictor):
             # Get all frames from the directory
             frame_names = self.load_frames_from_directory(video_dir)
             
+            prompts = {}  # hold all the clicks we add for visualization
+
             # Segment first frame
-            frame_idx = 0
-            _, out_obj_ids, out_mask_logits = self.predictor.add_new_points_or_box(
-                inference_state=inference_state,
-                frame_idx=frame_idx,
-                obj_id=1,
-                box=bbox
-            )
+            for obj_idx, obj_point_prompts in enumerate(point_prompts):
+                frame_idx = 0
+
+                points, labels = (
+                    np.array([[x, y] for x, y, _ in obj_point_prompts], dtype=np.float32),
+                    np.array([label for _, _, label in obj_point_prompts], dtype=np.int32)
+                )
+
+                prompts[obj_idx] = points, labels
+
+                _, out_obj_ids, out_mask_logits = self.predictor.add_new_points_or_box(
+                    inference_state=inference_state,
+                    frame_idx=frame_idx,
+                    obj_id=obj_idx,
+                    points=points,
+                    labels=labels,
+                )
+
+            # Create output directory if save_output is True
+            if save_output:
+                out_path_suffix = "objects"
+                output_dir = os.path.join(os.path.dirname(video_dir), f"out/samv2/{out_path_suffix}")
+                masks_dir = os.path.join(output_dir, "masks")
+                os.makedirs(masks_dir, exist_ok=True)
+
+            # Propagate mask across video
+            video_segments = {}
+            for out_frame_idx, out_obj_ids, out_mask_logits in self.predictor.propagate_in_video(inference_state):
+                for i, out_obj_id in enumerate(out_obj_ids):
+                    video_segments[out_frame_idx] = {out_obj_id: (out_mask_logits[i] > 0.0).cpu().numpy()}
+                    # logging.info("Visualize and optionally save the results")
+                    plt.close("all")
             
+                    plt.figure(figsize=(6, 4))
+                    plt.title(f"Frame {out_frame_idx}")
+                    img_path = os.path.join(video_dir, frame_names[out_frame_idx])
+                    img = PILImg.open(img_path)
+                    plt.imshow(img)
+                    
+                    out_file_name = frame_names[out_frame_idx].replace('.jpg', '.png')
+
+                    # Show segmentation masks
+                    for out_obj_id, out_mask in video_segments[out_frame_idx].items():
+
+                        for i, out_obj_id in enumerate(out_obj_ids):
+                            self.show_points(*prompts[out_obj_id], plt.gca())
+                            self.show_mask((out_mask_logits[i] > 0.0).cpu().numpy(), plt.gca(), obj_id=out_obj_id)
+                        # self.show_mask(out_mask[0], plt.gca(), obj_id=out_obj_id)
+                        
+                        # Turn off axis labels
+                        plt.axis('off')
+                        
+                        # Save the mask overlayed image result if save_output is True
+                        if save_output:
+                            plt.savefig(os.path.join(masks_dir, out_file_name))
+            
+        except Exception as e:
+            logging.error(f"Error during mask propagation: {e}")
+
+        return frame_names, video_segments
+
+    def propagate_masks_and_save(self, video_dir, bboxes, save_output=True):
+        """
+        Propagate the segmentation mask across the entire video and optionally save the frames with masks to a subdirectory.
+        Assumption: Only one object in the frame + only one box prompt is given as prompt
+        Parameters:
+        - video_dir: Path to the video frames directory.
+        - bboxes: The List of bounding boxes [[x_min, y_min, x_max, y_max]] for initial segmentation.
+        - save_output: If True, saves the segmented frames (default is True).
+        """
+        try:
+            # Initialize inference state
+            inference_state = self.predictor.init_state(video_path=video_dir)
+            self.predictor.reset_state(inference_state)
+            
+            # Get all frames from the directory
+            frame_names = self.load_frames_from_directory(video_dir)
+
+            # Segment first frame
+            for obj_idx, obj_bbox in enumerate(bboxes):
+                frame_idx = 0
+                _, out_obj_ids, out_mask_logits = self.predictor.add_new_points_or_box(
+                    inference_state=inference_state,
+                    frame_idx=frame_idx,
+                    obj_id=obj_idx,
+                    box=obj_bbox
+                )
+            
+
+
             # Create output directory if save_output is True
             if save_output:
                 out_path_suffix = f"/{self.text_prompt.lower().replace(' ', '_')}" if self.text_prompt else ''
@@ -736,9 +778,6 @@ class SAM2VideoPredictor(ObjectPredictor):
                 traj_overlayed_dir = os.path.join(output_dir, "traj_overlayed")
                 os.makedirs(masks_dir, exist_ok=True)
                 os.makedirs(traj_overlayed_dir, exist_ok=True)
-
-            # Initialize trajectory list
-            centroids = []
             
             # Propagate mask across video
             video_segments = {}
@@ -754,41 +793,20 @@ class SAM2VideoPredictor(ObjectPredictor):
                     img = PILImg.open(img_path)
                     plt.imshow(img)
                     
-                    # Draw bounding box
-                    plt.gca().add_patch(plt.Rectangle(
-                        (bbox[0], bbox[1]), bbox[2] - bbox[0], bbox[3] - bbox[1], 
-                        linewidth=2, edgecolor="red", facecolor="none"))
-                    
                     out_file_name = frame_names[out_frame_idx].replace('.jpg', '.png')
 
                     # Show segmentation masks
                     for out_obj_id, out_mask in video_segments[out_frame_idx].items():
-                        self.show_mask(out_mask, plt.gca(), obj_id=out_obj_id)
-                        
+                        for i, out_obj_id in enumerate(out_obj_ids):
+                            self.show_mask((out_mask_logits[i] > 0.0).cpu().numpy(), plt.gca(), obj_id=out_obj_id)
+                        # self.show_mask(out_mask[0], plt.gca(), obj_id=out_obj_id)
                         # Turn off axis labels
                         plt.axis('off')
                         
                         # Save the mask overlayed image result if save_output is True
                         if save_output:
                             plt.savefig(os.path.join(masks_dir, out_file_name))
-                        
-                        centroid =  self.calculate_centroid(out_mask)
-                        centroids.append(centroid)
-
-                        # Plot the tracklet with centroids
-                        num_centroids = len(centroids)
-                        colormap = cm.get_cmap("plasma")  # Choose a colormap
-                        
-                        for idx, (x, y) in enumerate(centroids):
-                            color = colormap(idx / num_centroids)  # Darker for more recent, lighter for older
-                            plt.plot(x, y, 'o', color=color, markersize=5)
-                        
-                        # Save the trajectory overlayed image if save_output is True
-                        if save_output:
-                            traj_result_path = os.path.join(traj_overlayed_dir, out_file_name)
-                            plt.savefig(traj_result_path)
-                            plt.close()
-            
+                                    
         except Exception as e:
             logging.error(f"Error during mask propagation: {e}")
 
