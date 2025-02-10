@@ -7,7 +7,8 @@
 # Hosted at https://hub.docker.com/repository/docker/irvlutd/ros-noetic-cuda-gazebo/
 
 # Use the official NVIDIA CUDA base image with Ubuntu 20.04
-FROM nvidia/cuda:11.8.0-base-ubuntu20.04
+# FROM nvidia/cuda:11.8.0-base-ubuntu20.04
+FROM nvidia/cuda:11.8.0-devel-ubuntu20.04
 
 # Set the maintainer label
 LABEL maintainer="jishnu.p@utdallas.edu"

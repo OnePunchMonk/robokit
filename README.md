@@ -2,7 +2,9 @@
 A toolkit for robotic tasks
 
 ## Features
-- A [Dockerfile](docker/Dockerfile-ub20.04-ros-noetic-cuda11.8-gazebo) to mimic robotic setup with ROS-noetic, CUDA11.8, Ubuntu20.04, Gazebo11
+- Docker
+  - A [Dockerfile](docker/Dockerfile-ub20.04-ros-noetic-cuda11.8-gazebo) to mimic robotic setup with ROS-noetic, CUDA11.8, Ubuntu20.04, Gazebo11
+  - [BundleSDF](https://github.com/NVlabs/BundleSDF) has a good [docker](https://github.com/NVlabs/BundleSDF?tab=readme-ov-file#dockerenvironment-setup) setup as well which can be used for reference. Check [this](docker/run_container.sh) script.
 - Zero-shot classification using OpenAI CLIP.
 - Zero-shot text-to-bbox approach for object detection using GroundingDINO.
 - Zero-shot bbox-to-mask approach for object detection using SegmentAnything (MobileSAM).
