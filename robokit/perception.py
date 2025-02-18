@@ -25,7 +25,9 @@ from groundingdino.util.utils import clean_state_dict
 # from segment_anything import SamPredictor, SamAutomaticMaskGenerator, sam_model_registry
 from mobile_sam import sam_model_registry, SamAutomaticMaskGenerator, SamPredictor
 from transformers import AutoImageProcessor, AutoModelForDepthEstimation
-from sam2.build_sam import build_sam2_video_predictor
+from sam2.build_sam import build_sam2_video_predictor, build_sam2
+from sam2.sam2_image_predictor import SAM2ImagePredictor
+
 from matplotlib import (patches, pyplot as plt)
 import matplotlib.cm as cm
 
@@ -559,7 +561,7 @@ class SAM2VideoPredictor(ObjectPredictor):
         Initializes the SAM2VideoPredictor class and attempts to load the model.
         """
         self.logger = logging.getLogger(__name__)        
-        self.predictor = self._load_predictor()
+        self.img_predictor, self.video_predictor = self._load_predictor()
         self.text_prompt = text_prompt
 
 
@@ -580,14 +582,35 @@ class SAM2VideoPredictor(ObjectPredictor):
         """
         Load the SAM2 model using the configuration and checkpoint path.
         """
-        try:
-            self.init_hydra_and_model_setup()
+        self.init_hydra_and_model_setup()
+        img_predictor = self._load_img_predictor()
+        video_predictor = self._load_video_predictor()
+        return img_predictor, video_predictor
 
+
+    def _load_img_predictor(self):
+        """
+        Load the SAM2 model using the configuration and checkpoint path for single image mask predictions.
+        """
+        try:
+            # Load the SAM2 model with the configuration and checkpoint
+            sam2_model = build_sam2(self.model_cfg, self.checkpoint_path)
+            img_predictor = SAM2ImagePredictor(sam2_model)
+            print("SAM2 image predictor initialized successfully.")
+            return img_predictor
+        
+        except Exception as e:
+            print(f"Failed to load the predictor: {e}")
+            raise
+
+    def _load_video_predictor(self):
+        """
+        Load the SAM2 model using the configuration and checkpoint path for video mask predictions.
+        """
+        try:
             # Load the SAM2 model with the configuration and checkpoint
             predictor = build_sam2_video_predictor(self.model_cfg, self.checkpoint_path)
-
             print("SAM2 video predictor initialized successfully.")
-            
             return predictor
         
         except Exception as e:
@@ -653,6 +676,46 @@ class SAM2VideoPredictor(ObjectPredictor):
                 os.rename(old_path, new_path)
                 print(f"Renamed: {filename} -> {new_filename}")
 
+    def predict_mask_in_image(self, image_pil, prompt_bboxes):
+        """
+        Predict the mask for the given image using the provided bounding boxes.
+
+        Args:
+            image_pil (PIL.Image): The input image in PIL format.
+            prompt_bboxes (np.array): [N,4] A list of bounding boxes to be used as the prompt for mask prediction.
+
+        Returns:
+            tuple: Contains the following elements:
+                - masks (torch.Tensor): The predicted masks.
+                - scores (torch.Tensor): The predicted scores.
+                - logits (torch.Tensor): The predicted logits.
+        """
+        try:
+            logging.info("Starting mask prediction.")
+
+            # Convert image to numpy array
+            image = np.array(image_pil.convert("RGB"))
+            logging.debug("Image converted to numpy array.")
+
+            # Set image for prediction
+            self.img_predictor.set_image(image)
+            logging.debug("Image set for predictor.")
+
+            # Predict masks, scores, and logits
+            masks, scores, logits = self.img_predictor.predict(
+                point_coords=None,
+                point_labels=None,
+                box=prompt_bboxes,
+                multimask_output=False,
+            )
+            logging.info("Mask prediction completed.")
+
+            return masks, scores, logits
+
+        except Exception as e:
+            logging.error(f"An error occurred during mask prediction: {e}")
+            raise  # Re-raise the exception to propagate it up
+
 
     def propagate_point_prompt_masks_and_save(self, video_dir, point_prompts, save_output=True):
         """
@@ -671,8 +734,8 @@ class SAM2VideoPredictor(ObjectPredictor):
         """
         try:
             # Initialize inference state
-            inference_state = self.predictor.init_state(video_path=video_dir)
-            self.predictor.reset_state(inference_state)
+            inference_state = self.video_predictor.init_state(video_path=video_dir)
+            self.video_predictor.reset_state(inference_state)
             
             # Get all frames from the directory
             frame_names = self.load_frames_from_directory(video_dir)
@@ -690,7 +753,7 @@ class SAM2VideoPredictor(ObjectPredictor):
 
                 prompts[obj_idx] = points, labels
 
-                _, out_obj_ids, out_mask_logits = self.predictor.add_new_points_or_box(
+                _, out_obj_ids, out_mask_logits = self.video_predictor.add_new_points_or_box(
                     inference_state=inference_state,
                     frame_idx=frame_idx,
                     obj_id=obj_idx,
@@ -707,7 +770,7 @@ class SAM2VideoPredictor(ObjectPredictor):
 
             # Propagate mask across video
             video_segments = {}
-            for out_frame_idx, out_obj_ids, out_mask_logits in self.predictor.propagate_in_video(inference_state):
+            for out_frame_idx, out_obj_ids, out_mask_logits in self.video_predictor.propagate_in_video(inference_state):
                 for i, out_obj_id in enumerate(out_obj_ids):
                     video_segments[out_frame_idx] = {out_obj_id: (out_mask_logits[i] > 0.0).cpu().numpy()}
                     # logging.info("Visualize and optionally save the results")
@@ -752,8 +815,8 @@ class SAM2VideoPredictor(ObjectPredictor):
         """
         try:
             # Initialize inference state
-            inference_state = self.predictor.init_state(video_path=video_dir)
-            self.predictor.reset_state(inference_state)
+            inference_state = self.video_predictor.init_state(video_path=video_dir)
+            self.video_predictor.reset_state(inference_state)
             
             # Get all frames from the directory
             frame_names = self.load_frames_from_directory(video_dir)
@@ -761,7 +824,7 @@ class SAM2VideoPredictor(ObjectPredictor):
             # Segment first frame
             for obj_idx, obj_bbox in enumerate(bboxes):
                 frame_idx = 0
-                _, out_obj_ids, out_mask_logits = self.predictor.add_new_points_or_box(
+                _, out_obj_ids, out_mask_logits = self.video_predictor.add_new_points_or_box(
                     inference_state=inference_state,
                     frame_idx=frame_idx,
                     obj_id=obj_idx,
@@ -781,7 +844,7 @@ class SAM2VideoPredictor(ObjectPredictor):
             
             # Propagate mask across video
             video_segments = {}
-            for out_frame_idx, out_obj_ids, out_mask_logits in self.predictor.propagate_in_video(inference_state):
+            for out_frame_idx, out_obj_ids, out_mask_logits in self.video_predictor.propagate_in_video(inference_state):
                 for i, out_obj_id in enumerate(out_obj_ids):
                     video_segments[out_frame_idx] = {out_obj_id: (out_mask_logits[i] > 0.0).cpu().numpy()}
                     # logging.info("Visualize and optionally save the results")

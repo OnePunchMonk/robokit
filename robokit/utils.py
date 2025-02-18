@@ -113,7 +113,8 @@ def annotate(image_source, boxes, logits, phrases):
     - PIL.Image: Annotated image.
     """
     try:
-        detections = sv.Detections(xyxy=boxes.cpu().numpy())
+        boxes = boxes if isinstance(boxes, np.ndarray) else boxes.cpu().numpy()
+        detections = sv.Detections(xyxy=boxes)
         labels = [
             f"{phrase} {logit:.2f}"
             for phrase, logit
@@ -133,13 +134,16 @@ def draw_mask(mask, draw, random_color=False):
     Draw a segmentation mask on an image.
 
     Parameters:
-    - mask (numpy.ndarray): The segmentation mask as a NumPy array.
+    - mask (numpy.ndarray): The segmentation mask as a NumPy array. [HxW]
     - draw (PIL.ImageDraw.ImageDraw): The PIL ImageDraw object to draw on.
     - random_color (bool, optional): Whether to use a random color for the mask. Default is False.
 
     Returns:
     - None
     """
+    if len(mask.shape) > 2:
+        mask = mask.squeeze()
+
     try:
         # Define the color for the mask
         if random_color:
@@ -173,8 +177,10 @@ def overlay_masks(image_pil: PILImg, masks):
     try:
         mask_image = PILImg.new('RGBA', image_pil.size, color=(0, 0, 0, 0))
         mask_draw = ImageDraw.Draw(mask_image)
+
         for mask in masks:
-            draw_mask(mask[0].cpu().numpy(), mask_draw, random_color=True)
+            mask = mask if isinstance(masks, np.ndarray) else mask[0].cpu().numpy()
+            draw_mask(mask, mask_draw, random_color=True)
 
         image_pil = image_pil.convert('RGBA')
         image_pil.alpha_composite(mask_image)
