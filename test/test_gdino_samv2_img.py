@@ -14,7 +14,7 @@ import os
 from PIL import Image as PILImg
 from absl import app, flags, logging
 from robokit.utils import annotate, overlay_masks
-from robokit.perception import GroundingDINOObjectPredictor, SAM2VideoPredictor
+from robokit.perception import GroundingDINOObjectPredictor, SAM2Predictor
 
 # Define absl flags for CLI arguments
 FLAGS = flags.FLAGS
@@ -36,7 +36,7 @@ def main(argv):
     gdino = GroundingDINOObjectPredictor()
 
     # Initialize SAM2 for tracking across frames
-    sam2 = SAM2VideoPredictor(text_prompt)
+    sam2 = SAM2Predictor(text_prompt)
 
     for img_path in sorted(os.listdir(frames_dir)):
         img_path = os.path.join(frames_dir, img_path)

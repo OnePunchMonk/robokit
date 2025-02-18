@@ -9,7 +9,7 @@ import os
 import numpy as np
 from absl import app, flags, logging
 from PIL import Image as PILImg
-from robokit.perception import SAM2VideoPredictor
+from robokit.perception import SAM2Predictor
 
 # Define absl flags for CLI arguments
 FLAGS = flags.FLAGS
@@ -74,7 +74,7 @@ def main(argv):
         logging.info("Initialize object detectors")
 
         # Initialize SAM2 for tracking across frames
-        sam2 = SAM2VideoPredictor(text_prompt)
+        sam2 = SAM2Predictor(text_prompt)
 
         # Read the first frame to detect initial bounding boxes
         first_frame_path = os.path.join(video_dir, sorted(os.listdir(video_dir))[0])
