@@ -1,3 +1,9 @@
+#----------------------------------------------------------------------------------------------------
+# Work done while being at the Intelligent Robotics and Vision Lab at the University of Texas, Dallas
+# Please check the licenses of the respective works utilized here before using this script.
+# 🖋️ Jishnu Jaykumar Padalunkal (2025).
+#----------------------------------------------------------------------------------------------------
+
 # imports
 import numpy as np
 from PIL import Image as PILImg
@@ -26,7 +32,9 @@ def get_clicked_points():
     return clicked_points
 
 # Load the image using PIL
-image_path = "./imgs/sam2-test/rgb/000000.jpg"  # Replace with the path to your image
+# image_path = "./imgs/sam2-test/rgb/000000.jpg"  # Replace with the path to your image
+image_path = "/home/jishnu/Desktop/iros25-submission/iros25-sub-rw/jpg/000000.jpg"  # Replace with the path to your image
+print(image_path)
 image = PILImg.open(image_path)
 
 clicked_points = [] #get_clicked_points()
@@ -69,4 +77,3 @@ for obj_points in clicked_points:
         plt.plot(x, y, marker, markersize=10)  # 'ro' means red circles
 
 plt.show()
-

@@ -733,33 +733,34 @@ class SAM2VideoPredictor(ObjectPredictor):
         - save_output: If True, saves the segmented frames (default is True).
         """
         try:
-            # Initialize inference state
-            inference_state = self.video_predictor.init_state(video_path=video_dir)
-            self.video_predictor.reset_state(inference_state)
-            
-            # Get all frames from the directory
-            frame_names = self.load_frames_from_directory(video_dir)
-            
-            prompts = {}  # hold all the clicks we add for visualization
+            with torch.inference_mode(), torch.autocast(self.device):
+                # Initialize inference state
+                inference_state = self.video_predictor.init_state(video_path=video_dir)
+                self.video_predictor.reset_state(inference_state)
+                
+                # Get all frames from the directory
+                frame_names = self.load_frames_from_directory(video_dir)
+                
+                prompts = {}  # hold all the clicks we add for visualization
 
-            # Segment first frame
-            for obj_idx, obj_point_prompts in enumerate(point_prompts):
-                frame_idx = 0
+                # Segment first frame
+                for obj_idx, obj_point_prompts in enumerate(point_prompts):
+                    frame_idx = 0
 
-                points, labels = (
-                    np.array([[x, y] for x, y, _ in obj_point_prompts], dtype=np.float32),
-                    np.array([label for _, _, label in obj_point_prompts], dtype=np.int32)
-                )
+                    points, labels = (
+                        np.array([[x, y] for x, y, _ in obj_point_prompts], dtype=np.float32),
+                        np.array([label for _, _, label in obj_point_prompts], dtype=np.int32)
+                    )
 
-                prompts[obj_idx] = points, labels
+                    prompts[obj_idx] = points, labels
 
-                _, out_obj_ids, out_mask_logits = self.video_predictor.add_new_points_or_box(
-                    inference_state=inference_state,
-                    frame_idx=frame_idx,
-                    obj_id=obj_idx,
-                    points=points,
-                    labels=labels,
-                )
+                    _, out_obj_ids, out_mask_logits = self.video_predictor.add_new_points_or_box(
+                        inference_state=inference_state,
+                        frame_idx=frame_idx,
+                        obj_id=obj_idx,
+                        points=points,
+                        labels=labels,
+                    )
 
             # Create output directory if save_output is True
             if save_output:
@@ -798,7 +799,7 @@ class SAM2VideoPredictor(ObjectPredictor):
                         # Save the mask overlayed image result if save_output is True
                         if save_output:
                             plt.savefig(os.path.join(masks_dir, out_file_name))
-            
+        
         except Exception as e:
             logging.error(f"Error during mask propagation: {e}")
 
@@ -814,22 +815,23 @@ class SAM2VideoPredictor(ObjectPredictor):
         - save_output: If True, saves the segmented frames (default is True).
         """
         try:
-            # Initialize inference state
-            inference_state = self.video_predictor.init_state(video_path=video_dir)
-            self.video_predictor.reset_state(inference_state)
-            
-            # Get all frames from the directory
-            frame_names = self.load_frames_from_directory(video_dir)
+            with torch.inference_mode(), torch.autocast(self.device):
+                # Initialize inference state
+                inference_state = self.video_predictor.init_state(video_path=video_dir)
+                self.video_predictor.reset_state(inference_state)
+                
+                # Get all frames from the directory
+                frame_names = self.load_frames_from_directory(video_dir)
 
-            # Segment first frame
-            for obj_idx, obj_bbox in enumerate(bboxes):
-                frame_idx = 0
-                _, out_obj_ids, out_mask_logits = self.video_predictor.add_new_points_or_box(
-                    inference_state=inference_state,
-                    frame_idx=frame_idx,
-                    obj_id=obj_idx,
-                    box=obj_bbox
-                )
+                # Segment first frame
+                for obj_idx, obj_bbox in enumerate(bboxes):
+                    frame_idx = 0
+                    _, out_obj_ids, out_mask_logits = self.video_predictor.add_new_points_or_box(
+                        inference_state=inference_state,
+                        frame_idx=frame_idx,
+                        obj_id=obj_idx,
+                        box=obj_bbox
+                    )
             
 
 
