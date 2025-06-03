@@ -551,14 +551,14 @@ class ZeroShotClipPredictor(CommonContextObject):
             raise e
 
 
-class SAM2VideoPredictor(ObjectPredictor):
+class SAM2Predictor(ObjectPredictor):
     """
     Predictor class for video object segmentation using the SAM2 model.
     Source: https://github.com/facebookresearch/sam2/blob/c2ec8e14a185632b0a5d8b161928ceb50197eddc/notebooks/video_predictor_example.ipynb
     """
     def __init__(self, text_prompt=None):
         """
-        Initializes the SAM2VideoPredictor class and attempts to load the model.
+        Initializes the SAM2Predictor class and attempts to load the model.
         """
         self.logger = logging.getLogger(__name__)        
         self.img_predictor, self.video_predictor = self._load_predictor()

@@ -7,7 +7,7 @@
 
 import numpy as np
 from absl import app, logging
-from robokit.perception import SAM2VideoPredictor
+from robokit.perception import SAM2Predictor
 
 
 def main(argv):
@@ -16,7 +16,7 @@ def main(argv):
 
     try:
         logging.info("Initialize object detectors")
-        sam2 = SAM2VideoPredictor()
+        sam2 = SAM2Predictor()
 
         logging.info("SAM2 prediction")
         # sam2.segment_using_bbox(video_dir, 0, np.array([224,155, 250,160]))

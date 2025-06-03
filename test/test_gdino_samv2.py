@@ -46,15 +46,17 @@ The script follows these steps:
 
 import os
 import numpy as np
-from absl import app, flags, logging
 from PIL import Image as PILImg
-from robokit.perception import GroundingDINOObjectPredictor, SAM2VideoPredictor
+from absl import app, flags, logging
+from robokit.utils import annotate, overlay_masks
+from robokit.perception import GroundingDINOObjectPredictor, SAM2Predictor
 
 # Define absl flags for CLI arguments
 FLAGS = flags.FLAGS
 flags.DEFINE_string('input_dir', None, 'Directory path to input video frames')
 flags.DEFINE_string('text_prompt', None, 'Text prompt for initial object detection')
 flags.DEFINE_integer('save_interval', 1, 'Interval for saving tracked frames')
+
 
 def main(argv):
     # Get input values from flags
@@ -65,47 +67,82 @@ def main(argv):
     if not video_dir or not text_prompt:
         raise ValueError("Both --input_dir and --text_prompt flags must be provided.")
 
-    try:
-        logging.info("Initialize object detectors")
+    logging.info("Initialize object detectors")
 
-        # Initialize Grounding DINO for initial bbox detection
-        gdino = GroundingDINOObjectPredictor()
+    # Initialize Grounding DINO for initial bbox detection
+    gdino = GroundingDINOObjectPredictor()
 
-        # Initialize SAM2 for tracking across frames
-        sam2 = SAM2VideoPredictor(text_prompt)
+    # Initialize SAM2 for tracking across frames
+    sam2 = SAM2Predictor(text_prompt)
 
-        # Read the first frame to detect initial bounding boxes
-        first_frame_path = os.path.join(video_dir, sorted(os.listdir(video_dir))[0])
-        first_frame = PILImg.open(first_frame_path).convert("RGB")
+    for img_path in sorted(os.listdir(video_dir)):
+        img_name = img_path
+        img_path = os.path.join(video_dir, img_path)
+        try:
+            # Read the first frame to detect initial bounding boxes
+            img_pil = PILImg.open(img_path).convert("RGB")
 
-        logging.info("GDINO: Predict initial bounding boxes, phrases, and confidence scores")
-        initial_bboxes, _, _ = gdino.predict(first_frame, text_prompt)
+            logging.info("GDINO: Predict initial bounding boxes, phrases, and confidence scores")
+            initial_bboxes, phrases, gdino_conf = gdino.predict(img_pil, text_prompt)
 
-        # Track each bounding box across frames
-        if len(initial_bboxes) > 0:
-            logging.info(f"Detected {len(initial_bboxes)} bounding boxes in the first frame")
+            # Scale bounding boxes to match the original image 
+            w, h = img_pil.size # Get image width and height 
+            image_pil_bboxes = gdino.bbox_to_scaled_xyxy(initial_bboxes, w, h)
             
-            bbox_array = []
-
-            # Process each bounding box
-            for i, bbox in enumerate(initial_bboxes):
-                # Convert bbox to [x_min, y_min, x_max, y_max] format
-                x_min, y_min, x_max, y_max = gdino.bbox_to_scaled_xyxy(bbox, *first_frame.size)
-                bbox_array.append(np.array([x_min, y_min, x_max, y_max]))
-
-            bbox_array = np.array(bbox_array, dtype=np.float32)
-
-            logging.info(f"SAM2: Track bounding box across all frames")
-            # Track and propagate the bounding box across frames with the specified save interval
-            frame_names, video_segments = sam2.propagate_masks_and_save(video_dir, bbox_array, save_interval)
+            logging.info(f"Run SAM2 using bounding box on current frame")
+            masks, scores, logits = sam2.predict_mask_in_image(img_pil, image_pil_bboxes)
             
-            logging.info("Tracking complete for all bounding boxes")
-        else:
-            logging.error("No bounding boxes detected in the first frame")
+            logging.info("Annotate the scaled image with bounding boxes, confidence scores, and labels, and display")
+            # bbox_annotated_pil = annotate(overlay_masks(img_pil, masks), image_pil_bboxes, gdino_conf, phrases)
 
-    except Exception as e:
-        # Handle unexpected errors
-        print(f"An unexpected error occurred: {e}")
+            # import pdb; pdb.set_trace()
+            
+            # bbox_annotated_pil.show()
+
+            print(masks.shape, scores)
+
+            result_masks = []
+
+            index = np.argmax(scores)
+            result_masks.append(masks[index])
+            #print(type(result_masks)) #Animesh Update
+            masks = np.array(result_masks)
+
+            image_array = np.array(masks, dtype=np.uint8) #Animesh Update
+        
+            img = np.zeros((480, 640), dtype=np.uint8)
+            print(img.shape)
+            box_size = dict()
+            for p in range(image_array.shape[0]-1, -1, -1):
+                one_count = 0
+                one_count = np.sum(image_array[p] == 1)
+                box_size[p] = one_count
+            val = max(box_size, key=box_size.get)   
+            background_mask = val
+            print(img.shape)
+            for p in range(image_array.shape[0]-1, -1, -1):
+                if p==background_mask:
+                    continue
+                img = np.where(image_array[p] == 1, p+1, img)
+
+            # background_mask = -1
+            # for p in range(image_array.shape[0]-1, -1, -1):
+            #     one_count = 0
+            #     one_count = np.sum(image_array[p] == 1)
+                        
+            #     if (one_count/307200)<=0.5:
+            #         img = np.where(image_array[p] == 1, assign, img)
+            #         assign+=1
+            print(img.shape)
+            to_save = PILImg.fromarray(img)
+            to_save.save('./gsam2_masks/'+img_name)
+            print("Completed Processing: " + img_name)
+
+        except Exception as e:
+            # Handle unexpected errors
+            print(f"An unexpected error occurred: {e}")
+        
+        # break
 
 
 def sanity_check(argv):
