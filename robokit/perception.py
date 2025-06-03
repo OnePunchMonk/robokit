@@ -766,7 +766,7 @@ class SAM2Predictor(ObjectPredictor):
             # Create output directory if save_output is True
             if save_output:
                 out_path_suffix = "objects"
-                output_dir = os.path.join(os.path.dirname(video_dir), f"out/samv2/{out_path_suffix}")
+                output_dir = os.path.join(os.path.dirname(video_dir), f"../out/samv2/{out_path_suffix}")
                 masks_dir = os.path.join(output_dir, "masks")
                 os.makedirs(masks_dir, exist_ok=True)
 
