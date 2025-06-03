@@ -560,6 +560,7 @@ class SAM2Predictor(ObjectPredictor):
         """
         Initializes the SAM2Predictor class and attempts to load the model.
         """
+        super(SAM2VideoPredictor, self).__init__()
         self.logger = logging.getLogger(__name__)        
         self.img_predictor, self.video_predictor = self._load_predictor()
         self.text_prompt = text_prompt
