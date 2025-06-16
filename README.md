@@ -1,35 +1,50 @@
-# RoboKit
+# 🤖 RoboKit
 A toolkit for robotic tasks
 
-## Features
-- Docker
-  - A [Dockerfile](docker/Dockerfile-ub20.04-ros-noetic-cuda11.8-gazebo) to mimic robotic setup with ROS-noetic, CUDA11.8, Ubuntu20.04, Gazebo11
-  - [BundleSDF](https://github.com/NVlabs/BundleSDF) has a good [docker](https://github.com/NVlabs/BundleSDF?tab=readme-ov-file#dockerenvironment-setup) setup as well which can be used for reference. Check [this](docker/run_container.sh) script.
-- Zero-shot classification using OpenAI CLIP.
-- Zero-shot text-to-bbox approach for object detection using GroundingDINO.
-- Zero-shot bbox-to-mask approach for object detection using SegmentAnything (MobileSAM).
-- Zero-shot image-to-depth approach for depth estimation using Depth Anything.
-- Zero-shot feature upsampling using FeatUp.
-- Zero-shot DoorHandle detection using [iTeach](https://irvlutd.github.io/iTeach/)-[DHYOLO](https://huggingface.co/spaces/IRVLUTD/DH-YOLO) model
-- Zero-shot bbox-to-mask video propogation approach for object tracking using SegmentAnythingV2 (SAMv2).
-  - Note that SAMv2 only supports mp4 or jpg files as of 11/06/2024
-  - Currently supports 
-    - Single/Multi point/bbox prompts with all video frames stored as jpg files in a directory
-    - Collection of points as prompts for various objects
-  - If you have an mp4 file then extract individual frames as jpg and store in a directory
-  - For single image mask predictions, no need to convert to jpg.
+## 🚀 Projects Using RoboKit
+Chronologically listed (latest first):
+- Perception: [MRVG](https://irvlutd.github.io/MultiGrounding/)
+- Mobile Manipulation: [HRT1](https://irvlutd.github.io/HRT1/)
+- Interactive Robot Teaching: [iTeach](https://irvlutd.github.io/iTeach/)
+- Robot Exploration and Navigation: [AutoX-SemMap](https://irvlutd.github.io/SemanticMapping/) 
+- Perception Research: [NIDS-Net](https://irvlutd.github.io/NIDSNet)
+- Grasp Trajectory Optimization: [GTO](https://irvlutd.github.io/GraspTrajOpt/)
 
-## Getting Started
+## ✨ Features
+- Docker Support
+- **Docker Support**
+  - Base image with ROS Noetic + CUDA 11.8 + Ubuntu 20.04 + Gazebo 11  
+    → [`Dockerfile`](docker/Dockerfile-ub20.04-ros-noetic-cuda11.8-gazebo)
+  - Refer to BundleSDF's [Docker setup](https://github.com/NVlabs/BundleSDF?tab=readme-ov-file#dockerenvironment-setup)
+  - Quickstart script: [`run_container.sh`](docker/run_container.sh)
 
-### Prerequisites
-TODO
+- **Zero-Shot Capabilities**
+  - 🔍 CLIP-based classification  
+  - 🎯 Text-to-BBox: GroundingDINO  
+  - 🧼 BBox-to-Mask: Segment Anything (MobileSAM)  
+  - 📏 Image-to-Depth: Depth Anything  
+  - 🔼 Feature Upsampling: FeatUp  
+  - 🚪 DoorHandle Detection: iTeach–DHYOLO ([demo](https://huggingface.co/spaces/IRVLUTD/DH-YOLO))  
+  - 📽️ Mask Propagation for Videos: SegmentAnythingV2 (SAMv2)
+    - Input: `jpg` or `mp4`
+    - Supports:
+      - Point/BBox prompts across video frames
+      - Multi-object point collection
+    - Tip: Use jpgs for frame-wise prediction; skip conversion for single images
+    - Note that SAMv2 only supports mp4 or jpg files as of 11/06/2024
+    - If you have an mp4 file then extract individual frames as jpg and store in a directory
+    - For single image mask predictions, no need to convert to jpg.
+
+## ⚙️ Getting Started
+
+### 🧰 Prerequisites
 - Python 3.7 or higher (tested 3.9.18)
 - torch (tested 2.0)
 - torchvision
 - pytorch-cuda=11.8 (tested)
 - [SAMv2 requires py>=3.10.0](https://github.com/facebookresearch/sam2/blob/c2ec8e14a185632b0a5d8b161928ceb50197eddc/setup.py#L171) (here the installation has been tweaked to remove this constraint)
 
-### Installation
+### 🛠️ Installation
 ```sh
 # clone
 git clone https://github.com/IRVLUTD/robokit.git && cd robokit 
@@ -45,7 +60,7 @@ conda install pytorch torchvision torchaudio pytorch-cuda=11.8 -c pytorch -c nvi
 python setup.py install
 ```
 
-### Known Installation Issues 
+🧩 Known Installation Issues
 - Check GroundingDINO [installation](https://github.com/IDEA-Research/GroundingDINO?tab=readme-ov-file#hammer_and_wrench-install) for the following error
 ```sh
 NameError: name '_C' is not defined
@@ -55,7 +70,7 @@ NameError: name '_C' is not defined
 pip install --upgrade --force-reinstall hydra-core
 ```
 
-## Usage
+🧪 Usage
 - Note: All test scripts are located in the [`test`](test) directory. Place the respective test scripts in the root directory to run.
 - SAM: [`test_sam.py`](test/test_sam.py)
 - GroundingDINO + SAM: [`test_gdino_sam.py`](test/test_gdino_sam.py)
@@ -71,13 +86,13 @@ pip install --upgrade --force-reinstall hydra-core
 - Test Datasets: [`test_dataset.py`](test/test_dataset.py)
   - `python test_dataset.py --gpu 0 --dataset <ocid_object_test/osd_object_test>`
 
-## Roadmap
+## 🛣️ Roadmap
+Planned improvements:
+- Config-based pretrained checkpoint switching
+- ✨ More features coming soon...
 
-Future goals for this project include: 
-- Add a config to set the pretrained checkpoints dynamically
-- More: TODO
 
-## Acknowledgments
+## 🙏 Acknowledgments
 
 This project is based on the following repositories (license check mandatory):
 - [CLIP](https://github.com/openai/CLIP)
@@ -89,5 +104,7 @@ This project is based on the following repositories (license check mandatory):
 - [SAMv2](https://github.com/facebookresearch/sam2)
 
 
-## License
+Special thanks to Dr. [Yu Xiang](https://yuxng.github.io/), [Sai Haneesh Allu](https://saihaneeshallu.github.io/), and [Itay Kadosh](https://scholar.google.com/citations?user=1ZLE5jsAAAAJ&hl=en) for their early feedback.
+
+## 📜 License
 This project is licensed under the MIT License. However, before using this tool please check the respective works for specific licenses.
