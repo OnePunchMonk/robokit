@@ -11,7 +11,6 @@ Chronologically listed (latest first):
 - Grasp Trajectory Optimization: [GTO](https://irvlutd.github.io/GraspTrajOpt/)
 
 ## ✨ Features
-- Docker Support
 - **Docker Support**
   - Base image with ROS Noetic + CUDA 11.8 + Ubuntu 20.04 + Gazebo 11  
     → [`Dockerfile`](docker/Dockerfile-ub20.04-ros-noetic-cuda11.8-gazebo)
