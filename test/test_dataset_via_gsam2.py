@@ -11,10 +11,10 @@ import numpy as np
 from PIL import Image as PILImg
 from matplotlib import pyplot as plt
 
-from robokit.datasets.factory import get_dataset
-from robokit.perception import GroundingDINOObjectPredictor, SAM2Predictor
-from robokit.utils import annotate, overlay_masks, combine_masks, filter_large_boxes
-from robokit.evaluation import multilabel_metrics
+from rkit.datasets.factory import get_dataset
+from rkit.perception import GroundingDINOObjectPredictor, SAM2Predictor
+from rkit.utils import annotate, overlay_masks, combine_masks, filter_large_boxes
+from rkit.evaluation import multilabel_metrics
 
 
 # filter labels on zero depths

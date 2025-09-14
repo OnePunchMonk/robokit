@@ -9,8 +9,8 @@ import numpy as np
 import message_filters
 from PIL import Image as PILImg
 from sensor_msgs.msg import Image, CameraInfo
-from robokit.utils import annotate, overlay_masks, combine_masks, filter_large_boxes
-from robokit.perception import GroundingDINOObjectPredictor, SegmentAnythingPredictor
+from rkit.utils import annotate, overlay_masks, combine_masks, filter_large_boxes
+from rkit.perception import GroundingDINOObjectPredictor, SegmentAnythingPredictor
 lock = threading.Lock()
 
 

@@ -5,7 +5,7 @@
 import numpy as np
 from absl import app, logging
 from PIL import Image as PILImg
-from robokit.perception import FeatUp
+from rkit.perception import FeatUp
 
 
 def main(argv):

@@ -9,7 +9,7 @@ import os
 import numpy as np
 from absl import app, flags, logging
 from PIL import Image as PILImg
-from robokit.perception import SAM2Predictor
+from rkit.perception import SAM2Predictor
 
 # Define absl flags for CLI arguments
 FLAGS = flags.FLAGS

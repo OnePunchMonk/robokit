@@ -7,7 +7,7 @@
 
 import numpy as np
 from absl import app, logging
-from robokit.perception import SAM2Predictor
+from rkit.perception import SAM2Predictor
 
 
 def main(argv):

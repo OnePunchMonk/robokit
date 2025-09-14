@@ -312,7 +312,7 @@ class GroundingDINOObjectPredictor(ObjectPredictor):
         super(GroundingDINOObjectPredictor, self).__init__()
         self.ckpt_repo_id = "ShilongLiu/GroundingDINO"
         self.ckpt_filenmae = "groundingdino_swint_ogc.pth"
-        self.config_file = "robokit/cfg/gdino/GroundingDINO_SwinT_OGC.py"
+        self.config_file = "rkit/cfg/gdino/GroundingDINO_SwinT_OGC.py"
         self.model = self.load_model_hf(
             self.config_file, self.ckpt_repo_id, self.ckpt_filenmae
         )
@@ -573,7 +573,7 @@ class SAM2Predictor(ObjectPredictor):
         hydra.core.global_hydra.GlobalHydra.instance().clear()
         
         # reinit hydra with a new search path for configs
-        hydra.initialize_config_module("robokit/sam2/sam2/", version_base='1.2') # Please don't change this
+        hydra.initialize_config_module("rkit/sam2/sam2/", version_base='1.2') # Please don't change this
 
         self.model_cfg = "configs/sam2.1/sam2.1_hiera_l.yaml" # Please don't change this
         self.checkpoint_path = "./ckpts/samv2/sam2.1_hiera_large.pth" # Please don't change this

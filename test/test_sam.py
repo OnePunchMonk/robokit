@@ -5,8 +5,8 @@
 import numpy as np
 from absl import app, logging
 from PIL import Image as PILImg
-from robokit.utils import overlay_masks
-from robokit.perception import SegmentAnythingPredictor
+from rkit.utils import overlay_masks
+from rkit.perception import SegmentAnythingPredictor
 
 
 def main(argv):

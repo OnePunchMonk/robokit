@@ -48,8 +48,8 @@ import os
 import numpy as np
 from PIL import Image as PILImg
 from absl import app, flags, logging
-from robokit.utils import annotate, overlay_masks
-from robokit.perception import GroundingDINOObjectPredictor, SAM2Predictor
+from rkit.utils import annotate, overlay_masks
+from rkit.perception import GroundingDINOObjectPredictor, SAM2Predictor
 
 # Define absl flags for CLI arguments
 FLAGS = flags.FLAGS

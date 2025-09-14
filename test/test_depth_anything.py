@@ -4,8 +4,8 @@
 
 from absl import (app, logging)
 from PIL import Image as PILImg
-from robokit.utils import apply_matplotlib_colormap
-from robokit.perception import DepthAnythingPredictor
+from rkit.utils import apply_matplotlib_colormap
+from rkit.perception import DepthAnythingPredictor
 
 
 def main(argv):

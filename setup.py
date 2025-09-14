@@ -25,7 +25,7 @@ class FileFetch(install):
         """
         install.run(self)
 
-        robokit_root_dir = os.getcwd()
+        rkit_root_dir = os.getcwd()
 
         # Install the dependency from the Git repository
         subprocess.run([
@@ -37,7 +37,6 @@ class FileFetch(install):
             'git+https://github.com/ChaoningZhang/MobileSAM@c12dd83cbe26dffdcc6a0f9e7be2f6fb024df0ed',
         ])
 
-
         # Step DHYOLO.1: Clone the DH-YOLO repository
         try:
             subprocess.run(["git", "clone", "https://github.com/IRVLUTD/iTeach"], check=True)
@@ -45,15 +44,13 @@ class FileFetch(install):
             pass
 
         # Step DHYOLO.2: Copy the required folder
-        subprocess.run(["cp", "-r", "iTeach/toolkit/iteach_toolkit", "robokit"], check=True)
+        subprocess.run(["cp", "-r", "iTeach/toolkit/iteach_toolkit", "rkit"], check=True)
 
-        # Step DHYOLO.3: Copy the required folder
+        # Step DHYOLO.3: Remove the iTeach folder
         subprocess.run(["rm", "-rf", "iTeach"], check=True)
 
-
-
         # Step SAMv2.1: Clone the repository
-        samv2_dir = os.path.join(robokit_root_dir, "robokit", "sam2")
+        samv2_dir = os.path.join(rkit_root_dir, "rkit", "sam2")
         os.makedirs(samv2_dir, exist_ok=True)
         try:
             subprocess.run(["git", "clone", "https://github.com/facebookresearch/sam2", samv2_dir], check=True)
@@ -70,14 +67,14 @@ class FileFetch(install):
         # Step SAMv2.4: Install samv2
         subprocess.run(["python", "setup.py", "install"], check=True)
 
-        # Step SAMv2.5: move to robokit root directory
-        os.chdir(robokit_root_dir)        
+        # Step SAMv2.5: move to rkit root directory
+        os.chdir(rkit_root_dir)
 
         # subprocess.run([
         #     "conda", "install", "-y", "pytorch", "torchvision", "torchaudio", "pytorch-cuda=11.7", "-c", "pytorch", "-c", "nvidia"
         # ])
 
-        subprocess.call
+    # ...existing code...
 
 
         # Download GroundingDINO checkpoint
@@ -200,27 +197,27 @@ def run_setup(argv):
         long_description = fh.read()
 
     setuptools.setup(
-        name = "RoboKit",
+        name = "rkit",
         version = "0.0.1",
         author = "Jishnu P",
         author_email = "jishnu.p@utdallas.edu",
         description = "A toolkit for robotic tasks",
         long_description = long_description,
         long_description_content_type = "text/markdown",
-        url = "https://github.com/IRVLUTD/RoboKit",
+    url = "https://github.com/IRVLUTD/rkit",
         classifiers = [
             "Programming Language :: Python :: 3",
             "License :: OSI Approved :: MIT License",
             "Operating System :: OS Independent",
         ],
-        package_dir = {"": "robokit"},
-        packages = setuptools.find_packages(where="robokit"),
+    package_dir = {"": "rkit"},
+    packages = setuptools.find_packages(where="rkit"),
         python_requires = ">=3.0",
         install_requires=requirements,
         cmdclass={
             'install': FileFetch,
         },
-        package_data={'gdino_cfg': ["robokit/cfg/gdino/GroundingDINO_SwinT_OGC.py"]}
+    package_data={'gdino_cfg': ["rkit/cfg/gdino/GroundingDINO_SwinT_OGC.py"]}
     )
 
 

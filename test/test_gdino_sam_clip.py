@@ -5,8 +5,8 @@
 import numpy as np
 from absl import app, logging
 from PIL import Image as PILImg
-from robokit.utils import annotate, overlay_masks
-from robokit.perception import GroundingDINOObjectPredictor, SegmentAnythingPredictor, ZeroShotClipPredictor
+from rkit.utils import annotate, overlay_masks
+from rkit.perception import GroundingDINOObjectPredictor, SegmentAnythingPredictor, ZeroShotClipPredictor
 
 
 def main(argv):

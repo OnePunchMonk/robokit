@@ -16,7 +16,7 @@ import time
 import rospy
 import datetime
 import numpy as np
-from robokit.ros.fetch_listener import ImageListener
+from rkit.ros.fetch_listener import ImageListener
 
 class SaveData:
     def __init__(self, task_name, time_interval):

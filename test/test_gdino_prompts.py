@@ -52,8 +52,8 @@ import os
 import numpy as np
 from absl import app, flags, logging
 from PIL import Image as PILImg
-from robokit.utils import annotate, overlay_masks
-from robokit.perception import GroundingDINOObjectPredictor
+from rkit.utils import annotate, overlay_masks
+from rkit.perception import GroundingDINOObjectPredictor
 from tqdm import tqdm
 
 # Set up absl flags
